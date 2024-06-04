@@ -131,6 +131,12 @@ cargo test
 
 このコマンドは、testsディレクトリやsrcディレクトリ内のテストコードを実行します。
 
+## おすすめリソース
+
+- [The Rust Programming Language (The Book)](https://doc.rust-jp.rs/book-ja/)
+- [Rust by Example](https://doc.rust-jp.rs/rust-by-example-ja/)
+- [Rustlings（インタラクティブなRustチュートリアル）](https://github.com/rust-lang/rustlings)
+
 ## まとめ
 
 以上で、Rustのインストール方法とCargoの基本的な使い方についての説明は終わりです。これでRustの開発環境を整え、プロジェクトを作成し、ビルド・実行・テストする基本的な流れが理解できたと思います。Rustを使って素晴らしいプログラムを書いていきましょう！
