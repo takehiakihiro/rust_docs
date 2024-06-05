@@ -378,7 +378,7 @@ let mut s = String::from("hello");
 let s1 = &mut s; // 可変借用
 s1.push_str(", world");
 println!("{}", s1); // 出力: hello, world
-// println!("{}", s); // エラー: sはすでに借用されている
+println!("{}", s); // 出力: hello, world
 ```
 
 Pythonでは、リストや辞書などのミュータブルなデータ型を直接操作できます。
