@@ -1134,6 +1134,208 @@ Rust の構造体は、関連するデータをまとめるための強力なツ
 
 ---
 
+# いきなり出てきた derive アトリビュートの解説
+
+`#[derive(...)]`アトリビュートは、Rust のコンパイラが自動的に特定のトレイトの実装を生成するために使用するメタデータです。これにより、開発者は手動でトレイトを実装する必要がなくなり、コードの簡潔さと可読性が向上します。
+
+### `#[derive(...)]`が行っていること
+
+`#[derive(...)]`アトリビュートは、指定されたトレイトの実装を自動生成します。これにより、型（構造体や列挙型）に対して、通常は手動で実装する必要があるトレイトが自動的に実装されます。以下に、よく使われるトレイトと、その背後で行われている自動生成の詳細を説明します。
+
+### 例: `Debug`トレイト
+
+`#[derive(Debug)]`は、型に対して`Debug`トレイトの実装を自動生成します。これにより、その型の値をフォーマットしてデバッグ出力できるようになります。
+
+#### 手動実装と自動生成
+
+手動で`Debug`トレイトを実装する場合、以下のようなコードが必要です。
+
+```rust
+use std::fmt;
+
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl fmt::Debug for Person {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Person")
+            .field("name", &self.name)
+            .field("age", &self.age)
+            .finish()
+    }
+}
+```
+
+しかし、`#[derive(Debug)]`を使用すると、コンパイラが上記の実装を自動生成します。
+
+```rust
+#[derive(Debug)]
+struct Person {
+    name: String,
+    age: u32,
+}
+```
+
+### 例: `Clone`トレイト
+
+`#[derive(Clone)]`は、型に対して`Clone`トレイトの実装を自動生成します。これにより、その型の値を複製できるようになります。
+
+#### 手動実装と自動生成
+
+手動で`Clone`トレイトを実装する場合、以下のようなコードが必要です。
+
+```rust
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Clone for Person {
+    fn clone(&self) -> Self {
+        Person {
+            name: self.name.clone(),
+            age: self.age,
+        }
+    }
+}
+```
+
+しかし、`#[derive(Clone)]`を使用すると、コンパイラが上記の実装を自動生成します。
+
+```rust
+#[derive(Clone)]
+struct Person {
+    name: String,
+    age: u32,
+}
+```
+
+### 例: `PartialEq`トレイト
+
+`#[derive(PartialEq)]`は、型に対して`PartialEq`トレイトの実装を自動生成します。これにより、その型の値が等しいかどうかを比較できるようになります。
+
+#### 手動実装と自動生成
+
+手動で`PartialEq`トレイトを実装する場合、以下のようなコードが必要です。
+
+```rust
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl PartialEq for Person {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.age == other.age
+    }
+}
+```
+
+しかし、`#[derive(PartialEq)]`を使用すると、コンパイラが上記の実装を自動生成します。
+
+```rust
+#[derive(PartialEq)]
+struct Person {
+    name: String,
+    age: u32,
+}
+```
+
+### 自動生成されるトレイトの一覧
+
+`#[derive(...)]`で自動生成できるトレイトの一部を以下に示します。
+
+- `Debug`: 型の値をフォーマットしてデバッグ出力するためのトレイト。
+- `Clone`: 型の値を複製するためのトレイト。
+- `Copy`: 型の値をビット単位で複製するためのトレイト。
+- `PartialEq`: 型の値が等しいかどうかを比較するためのトレイト。
+- `Eq`: 完全な等価性を表すためのトレイト。
+- `PartialOrd`: 型の値が部分的な順序関係を持つことを表すトレイト。
+- `Ord`: 完全な順序関係を持つことを表すトレイト。
+- `Default`: 型のデフォルト値を提供するためのトレイト。
+- `Hash`: 型の値をハッシュ化するためのトレイト。
+
+### まとめ
+
+`#[derive(...)]`アトリビュートは、Rust のコンパイラが指定されたトレイトの実装を自動生成するために使用されます。これにより、開発者は手動でトレイトを実装する必要がなくなり、コードの簡潔さと可読性が向上します。自動生成されるトレイトの実装は、通常の Rust コードとして生成され、コンパイル時にインライン化されます。これにより、パフォーマンスの低下を避けつつ、便利な機能を簡単に利用することができます。
+
+---
+
+# コラム：プリミティブ型について
+
+### プリミティブ型と`Copy`トレイト
+
+Rust の以下のプリミティブ型は`Copy`トレイトを実装しています：
+
+- 整数型（`u8`, `u16`, `u32`, `u64`, `u128`, `i8`, `i16`, `i32`, `i64`, `i128`）
+- 浮動小数点型（`f32`, `f64`）
+- ブーリアン型（`bool`）
+- 文字型（`char`）
+
+これらの型は、値のコピーが安価であり、`Copy`トレイトを実装するのが一般的です。`Copy`トレイトを実装している型は、所有権の移動を伴う操作でも値がそのままコピーされるため、所有権の移動が発生しません。
+
+### 具体的な例
+
+以下に、`Copy`トレイトを実装しているプリミティブ型と、それに基づいた`Clone`トレイトの実装例を示します：
+
+```rust
+#[derive(Clone)]
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Clone for Person {
+    fn clone(&self) -> Self {
+        Person {
+            name: self.name.clone(),
+            age: self.age, // `u32`は`Copy`トレイトを実装しているので、所有権の移動は発生しない
+        }
+    }
+}
+```
+
+### `Copy`トレイトを実装していない型
+
+もし`Clone`トレイトだけを実装していて`Copy`トレイトを実装していない型が含まれている場合、そのフィールドに対しては`clone`を明示的に呼び出す必要があります：
+
+```rust
+#[derive(Clone)]
+struct Person {
+    name: String,
+    age: u32, // `u32`は`Copy`トレイトを実装している
+    address: Address, // `Address`は`Clone`のみを実装している
+}
+
+#[derive(Clone)]
+struct Address {
+    street: String,
+    city: String,
+}
+
+impl Clone for Person {
+    fn clone(&self) -> Self {
+        Person {
+            name: self.name.clone(),
+            age: self.age, // `u32`は`Copy`トレイトを実装しているため、`clone`は不要
+            address: self.address.clone(), // `Address`は`Clone`トレイトのみを実装しているため、`clone`が必要
+        }
+    }
+}
+```
+
+### まとめ
+
+- `u32`のようなプリミティブ型は`Copy`トレイトを実装しているため、所有権の移動を伴わないコピーが行われます。
+- `Copy`トレイトを実装していない型に対しては、`clone`メソッドを明示的に呼び出してコピーを行う必要があります。
+- `#[derive(Clone)]`を使用すると、これらの操作を自動的に行ってくれるため、コードが簡潔になります。
+
+`Copy`トレイトの実装により、所有権の移動に関する複雑な問題を避けつつ、効率的に値のコピーを行うことができます。
+
+---
+
 # エラーハンドリングの詳細
 
 Rust のエラーハンドリングには、`unwrap()`による強制終了や、`?`演算子を使ったエラーハンドリングがあります。これらの手法を詳しく説明します。
@@ -1775,7 +1977,7 @@ Copy トレイトを実装することで、型のインスタンスをビット
 
 ### なぜ Copy トレイトが必要なのか？
 
-Copy トレイトは、特に軽量なデータ型（整数、浮動小数点数など）に対して使用されます。これらの型は、ビット単位でのコピーが安価であり、複製操作が頻繁に行われてもパフォーマンスに影響を与えません。また、Copy トレイトを実装することで、値がコピーされた後も元の値を引き続き使用することができます。ただし、Copy トレイトを実装したことで、ほぼすべての変数が Move で所有権が移るのに対し、Copy トレイトを実装した構造体や列挙型だけがコピーされてしまいます。所有権の移動も発生しません。メモリ的にも完全な複製になるので。そのため本当に必要な時以外は使わない方がいいです。
+Copy トレイトは、特に軽量なデータ型（整数、浮動小数点数など）に対して使用されます。これらの型は、ビット単位でのコピーが安価であり、複製操作が頻繁に行われてもパフォーマンスに影響を与えません。また、Copy トレイトを実装することで、値がコピーされた後も元の値を引き続き使用することができます。ただし、Copy トレイトを実装したことで、ほぼすべての変数が Move で所有権が移るのに対し、Copy トレイトを実装した構造体や列挙型だけがコピーされてしまいます。所有権の移動も発生しません。メモリ的にも完全な複製になるので。そのため本当に必要な時以外は使わない方がいいでしょう。
 
 ### 自動導入
 
@@ -1905,6 +2107,253 @@ fn main() {
 ## まとめ
 
 Rust の標準ライブラリに用意されているトレイトを利用することで、型に対する共通の操作や機能を簡単に追加できます。Debug、Clone、Copy、PartialEq、Eq、PartialOrd、Ord、Default といったトレイトを理解し、適切に使用することで、より強力で再利用可能なコードを書くことができます。
+
+---
+
+# ジェネリクスとは？
+
+ジェネリクスは、型パラメータを使用して、型に依存しないコードを記述するための仕組みです。これにより、同じコードを異なる型に対して再利用することができます。
+
+### ジェネリクスの基本構文
+
+ジェネリクスを使用する場合、型パラメータを`<>`で囲んで指定します。以下に、ジェネリクスを使用した関数と構造体の例を示します。
+
+#### ジェネリック関数
+
+```rust
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+
+fn main() {
+    let numbers = vec![34, 50, 25, 100, 65];
+    println!("The largest number is {}", largest(&numbers));
+
+    let chars = vec!['y', 'm', 'a', 'q'];
+    println!("The largest char is {}", largest(&chars));
+}
+```
+
+この例では、`largest`関数はジェネリクスを使用して、任意の型のリストの中から最大の要素を見つけます。型パラメータ`T`は`PartialOrd`トレイトを実装している必要があります。これにより、`T`型の要素を比較することができます。
+
+#### ジェネリック構造体
+
+```rust
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn new(x: T, y: T) -> Self {
+        Point { x, y }
+    }
+}
+
+fn main() {
+    let integer_point = Point::new(5, 10);
+    let float_point = Point::new(1.0, 4.0);
+
+    println!("Integer Point: ({}, {})", integer_point.x, integer_point.y);
+    println!("Float Point: ({}, {})", float_point.x, float_point.y);
+}
+```
+
+この例では、`Point`構造体はジェネリクスを使用して、異なる型の`x`と`y`のフィールドを持つことができます。`Point`構造体は、整数や浮動小数点数の座標を持つことができます。
+
+### トレイト境界
+
+ジェネリック型パラメータに対して特定のトレイトを要求する場合、トレイト境界を使用します。これにより、型パラメータが指定されたトレイトを実装していることを保証します。
+
+#### トレイト境界の使用例
+
+```rust
+fn print_largest<T: PartialOrd + std::fmt::Debug>(list: &[T]) {
+    let mut largest = &list[0];
+    for item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+    println!("The largest element is {:?}", largest);
+}
+
+fn main() {
+    let numbers = vec![34, 50, 25, 100, 65];
+    print_largest(&numbers);
+
+    let chars = vec!['y', 'm', 'a', 'q'];
+    print_largest(&chars);
+}
+```
+
+この例では、`print_largest`関数に対して、型パラメータ`T`が`PartialOrd`と`std::fmt::Debug`の両方を実装していることを要求しています。これにより、`T`型の要素を比較し、デバッグ出力することができます。
+
+### ジェネリック型パラメータを持つメソッド
+
+構造体や列挙型のメソッドもジェネリクスを使用できます。
+
+#### ジェネリックメソッドの例
+
+```rust
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn new(x: T, y: T) -> Self {
+        Point { x, y }
+    }
+}
+
+impl Point<f64> {
+    fn distance_from_origin(&self) -> f64 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+
+fn main() {
+    let integer_point = Point::new(5, 10);
+    let float_point = Point::new(1.0, 4.0);
+
+    println!("Integer Point: ({}, {})", integer_point.x, integer_point.y);
+    println!("Float Point: ({}, {})", float_point.x, float_point.y);
+    println!("Distance from origin: {}", float_point.distance_from_origin());
+}
+```
+
+この例では、`Point<f64>`に対して`distance_from_origin`メソッドを実装しています。これにより、`f64`型の座標を持つ`Point`のみがこのメソッドを使用できます。
+
+### 複数のジェネリック型パラメータ
+
+複数のジェネリック型パラメータを持つ構造体や関数を定義することもできます。
+
+#### 複数のジェネリック型パラメータの例
+
+```rust
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn new(x: T, y: U) -> Self {
+        Point { x, y }
+    }
+}
+
+fn main() {
+    let point = Point::new(5, 4.0);
+    println!("Point: ({}, {})", point.x, point.y);
+}
+```
+
+この例では、`Point`構造体は異なる型`T`と`U`のフィールドを持ちます。`Point`は、整数と浮動小数点数の座標を持つことができます。
+
+### まとめ
+
+- **ジェネリクスの基本**: Rust のジェネリクスは、型パラメータを使用して、型に依存しない抽象的なコードを書くための仕組みです。
+- **ジェネリック関数と構造体**: 型パラメータを使用して、複数の異なる型に対して共通の処理を行うことができます。
+- **トレイト境界**: 型パラメータに対して特定のトレイトを要求することで、型が特定の機能を持つことを保証できます。
+- **ジェネリックメソッド**: 構造体や列挙型のメソッドにもジェネリクスを使用できます。
+- **複数のジェネリック型パラメータ**: 複数の型パラメータを使用することで、より複雑な構造体や関数を作成できます。
+
+## ジェネリクスを理解することで、Rust の型システムをより柔軟かつ強力に活用することができます。
+
+---
+
+# ポリモーフィズムとは？
+
+ポリモーフィズム（多態性）は、同じインターフェースを共有しながら、異なる具体的な実装を持つ複数のオブジェクトを扱う能力を指します。オブジェクト指向プログラミング（OOP）における代表的なポリモーフィズムの形態には、サブタイプポリモーフィズム（継承）やパラメトリックポリモーフィズム（ジェネリクス）が含まれます。
+
+### ジェネリクスとポリモーフィズム
+
+ジェネリクスはパラメトリックポリモーフィズムの一形態です。これにより、データ型や関数が特定の型に依存せずに記述でき、さまざまな型に対して動作するようになります。
+
+#### ジェネリクスの例
+
+```rust
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+```
+
+この関数は、`T`型のリストを受け取り、その中の最大の要素を返します。`T`が`PartialOrd`トレイトを実装している限り、どんな型でも使用できます。
+
+#### トレイトオブジェクトによるポリモーフィズム
+
+Rust では、トレイトオブジェクトを使ってサブタイプポリモーフィズムを実現できます。これにより、異なる型のオブジェクトが同じトレイトを実装することで、同じインターフェースを共有し、動的なディスパッチを行います。
+
+```rust
+trait Shape {
+    fn area(&self) -> f64;
+}
+
+struct Circle {
+    radius: f64,
+}
+
+struct Square {
+    side: f64,
+}
+
+impl Shape for Circle {
+    fn area(&self) -> f64 {
+        3.14 * self.radius * self.radius
+    }
+}
+
+impl Shape for Square {
+    fn area(&self) -> f64 {
+        self.side * self.side
+    }
+}
+
+fn print_area(shape: &dyn Shape) {
+    println!("The area is {}", shape.area());
+}
+
+fn main() {
+    let circle = Circle { radius: 5.0 };
+    let square = Square { side: 3.0 };
+
+    print_area(&circle);
+    print_area(&square);
+}
+```
+
+この例では、`Shape`トレイトを実装した`Circle`と`Square`の具体的な型に対して、同じインターフェース（`area`メソッド）を共有し、動的に処理しています。
+
+### ジェネリクスとトレイトオブジェクトの違い
+
+- **ジェネリクス（コンパイル時ポリモーフィズム）**:
+  - パラメトリックポリモーフィズムの一種で、コンパイル時に具体的な型が決定されます。
+  - 実行時オーバーヘッドがなく、高速です。
+  - コンパイル時に型チェックが行われるため、安全です。
+- **トレイトオブジェクト（動的ポリモーフィズム）**:
+  - サブタイプポリモーフィズムの一種で、実行時に具体的な型が決定されます。
+  - 若干の実行時オーバーヘッドがあります（動的ディスパッチのため）。
+  - さまざまな型を同じインターフェースで扱うことができ、柔軟です。
+
+### まとめ
+
+- **ジェネリクス**: コンパイル時ポリモーフィズムの一形態であり、型に依存しない抽象的なコードを記述するために使用します。これにより、高速で型安全なコードを記述できます。
+- **ポリモーフィズム**: 同じインターフェースを共有しながら、異なる具体的な実装を持つ複数のオブジェクトを扱う能力を指します。Rust では、ジェネリクスによるパラメトリックポリモーフィズムと、トレイトオブジェクトによるサブタイプポリモーフィズムの両方をサポートしています。
+
+ジェネリクスとポリモーフィズムを適切に使い分けることで、柔軟かつ効率的なコードを記述することができます。
 
 ---
 
@@ -2241,724 +2690,5 @@ async fn main() {
 ## まとめ
 
 `Arc`と`Mutex`を使うことで、スレッドや tokio のタスク間で変数を安全に共有し、同時に編集することが可能になります。これにより、Rust の所有権システムの制約を克服しつつ、データ競合を防ぐことができます。この技術を活用することで、高効率で安全な並行処理を実現できます。
-
----
-
-# 課題
-
-## 課題 1
-
-### 課題内容
-
-1. 構造体 Person を定義してください。Person は名前と年齢を持ちます。
-2. 列挙型 PersonType を定義してください。PersonType は Student と Teacher の 2 つのバリアントを持ちます。
-3. PersonType ごとに Person を管理するハッシュマップを作成してください。
-4. Person を追加、削除、リストする関数を実装してください。
-5. ハッシュマップ内の全ての Person をイテレータを使って表示する関数を実装してください。
-
-#### 構造体の例
-
-```rust
-use std::collections::HashMap;
-use std::fmt;
-
-#[derive(Debug)]
-struct Person {
-    name: String,
-    age: u32,
-}
-
-impl fmt::Display for Person {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Name: {}, Age: {}", self.name, self.age)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash)]
-enum PersonType {
-    Student,
-    Teacher,
-}
-
-struct PersonManager {
-    people: HashMap<PersonType, Vec<Person>>,
-}
-```
-
-### サンプルコード
-
-> [!WARNING]
-> これ以降は解答となる問題に対するサンプルコードです。最初はこれを見ずに自分なりに頑張ってみてください。
-
-```rust
-use std::collections::HashMap;
-use std::fmt;
-
-#[derive(Debug)]
-struct Person {
-    name: String,
-    age: u32,
-}
-
-impl fmt::Display for Person {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Name: {}, Age: {}", self.name, self.age)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash)]
-enum PersonType {
-    Student,
-    Teacher,
-}
-
-struct PersonManager {
-    people: HashMap<PersonType, Vec<Person>>,
-}
-
-impl PersonManager {
-    fn new() -> Self {
-        Self {
-            people: HashMap::new(),
-        }
-    }
-
-    fn add_person(&mut self, person_type: PersonType, person: Person) {
-        self.people.entry(person_type).or_insert(Vec::new()).push(person);
-    }
-
-    fn remove_person(&mut self, person_type: &PersonType, name: &str) -> bool {
-        if let Some(people) = self.people.get_mut(person_type) {
-            if let Some(pos) = people.iter().position(|p| p.name == name) {
-                people.remove(pos);
-                return true;
-            }
-        }
-        false
-    }
-
-    fn list_people(&self, person_type: &PersonType) {
-        if let Some(people) = self.people.get(person_type) {
-            for person in people {
-                println!("{}", person);
-            }
-        } else {
-            println!("No people found for {:?}", person_type);
-        }
-    }
-
-    fn list_all_people(&self) {
-        for (person_type, people) in &self.people {
-            println!("{:?}:", person_type);
-            for person in people {
-                println!("{}", person);
-            }
-        }
-    }
-}
-
-fn main() {
-    let mut manager = PersonManager::new();
-
-    manager.add_person(PersonType::Student, Person { name: String::from("Alice"), age: 20 });
-    manager.add_person(PersonType::Student, Person { name: String::from("Bob"), age: 22 });
-    manager.add_person(PersonType::Teacher, Person { name: String::from("Charlie"), age: 45 });
-
-    println!("Listing all students:");
-    manager.list_people(&PersonType::Student);
-
-    println!("\nListing all teachers:");
-    manager.list_people(&PersonType::Teacher);
-
-    println!("\nListing all people:");
-    manager.list_all_people();
-
-    println!("\nRemoving Alice from students...");
-    manager.remove_person(&PersonType::Student, "Alice");
-
-    println!("\nListing all students after removal:");
-    manager.list_people(&PersonType::Student);
-}
-```
-
-### 課題解説
-
-#### 構造体と列挙型の定義
-
-1. 構造体 Person：名前と年齢を持つシンプルな構造体です。
-
-```rust
-#[derive(Debug)]
-struct Person {
-    name: String,
-    age: u32,
-}
-```
-
-2. 列挙型 PersonType：Student と Teacher の 2 つのバリアントを持つ列挙型です。
-
-```rust
-#[derive(Debug, PartialEq, Eq, Hash)]
-enum PersonType {
-    Student,
-    Teacher,
-}
-```
-
-3. ハッシュマップの使用
-
-`PersonType`ごとに`Person`を管理するハッシュマップを定義します。ハッシュマップのキーは`PersonType`、値は`Person`のベクタです。
-
-#### 関数の実装
-
-1. `add_person`：`PersonType`ごとに`Person`を追加する関数です。
-
-```rust
-fn add_person(&mut self, person_type: PersonType, person: Person) {
-    self.people.entry(person_type).or_insert(Vec::new()).push(person);
-}
-```
-
-2. `remove_person`：`PersonType`ごとに`Person`を削除する関数です。
-
-```rust
-fn remove_person(&mut self, person_type: &PersonType, name: &str) -> bool {
-    if let Some(people) = self.people.get_mut(person_type) {
-        if let Some(pos) = people.iter().position(|p| p.name == name) {
-            people.remove(pos);
-            return true;
-        }
-    }
-    false
-}
-```
-
-3. `list_people`：指定した`PersonType`の全ての Person を表示する関数です。
-
-```rust
-fn list_people(&self, person_type: &PersonType) {
-    if let Some(people) = self.people.get(person_type) {
-        for person in people {
-            println!("{}", person);
-        }
-    } else {
-        println!("No people found for {:?}", person_type);
-    }
-}
-```
-
-4. `list_all_people`：ハッシュマップ内の全ての`Person`を表示する関数です。
-
-```rust
-fn list_all_people(&self) {
-    for (person_type, people) in &self.people {
-        println!("{:?}:", person_type);
-        for person in people {
-            println!("{}", person);
-        }
-    }
-}
-```
-
-この課題を通じて、Rust のコンテナ、構造体、列挙型、およびイテレータの使用方法を実践的に学ぶことができます。
-
-#### コラム：なぜ&self.people なのか？
-
-`self.people`は`HashMap<PersonType, Vec<Person>>`型のフィールドです。このフィールドにアクセスする際に、`&self.people`と書く必要があるのは、以下の理由によります。
-
-##### 借用による所有権の問題を回避
-
-Rust の所有権システムは、同時に複数のミュータブル参照を許さず、所有権の移動も制限しています。`self.people`を直接イテレートしようとすると、所有権の移動が発生し、以降の操作で`self.people`を使用できなくなります。
-
-しかし、`&self.people`と書くことで、`self.people`を不変借用（immutable borrow）するだけになり、所有権の移動が発生しません。これにより、以下の利点があります。
-
-1. 安全なアクセス：`self.people`を不変借用することで、他の部分での同時ミュータブル参照が防止され、安全にアクセスできます。
-2. 再利用可能：`self.people`の所有権は`self`が保持したままなので、関数の他の部分でも`self.people`を使用できます。
-
-##### イテレータの生成
-
-`&self.people`とすることで、ハッシュマップに対するイテレータが生成されます。このイテレータは、`self.people`を不変借用した状態で生成されるため、ハッシュマップの内容を変更することなく、内容を走査できます。
-
-#### コードの具体例と解説
-
-以下に、具体例とその解説を示します。
-
-##### list_all_people 関数
-
-```rust
-struct PersonManager {
-    people: HashMap<PersonType, Vec<Person>>,
-}
-
-impl PersonManager {
-    // 他の関数は省略
-
-    fn list_all_people(&self) {
-        for (person_type, people) in &self.people {
-            println!("{:?}:", person_type);
-            for person in people {
-                println!("{}", person);
-            }
-        }
-    }
-}
-```
-
-##### 具体例の動作
-
-1. 不変参照を取得：`&self.people`により、`self.people`の不変参照を取得します。
-2. イテレータを生成：この不変参照を使って、ハッシュマップの各エントリに対するイテレータを生成します。
-3. 各エントリを走査：生成されたイテレータを使って、ハッシュマップの各エントリ（`person_type`と`people`）を走査します。
-
-#### まとめ
-
-`for (person_type, people) in &self.people`とすることで、`self.people`を不変借用し、所有権を維持しつつ、ハッシュマップの各エントリに対するイテレータを生成します。これにより、安全に`self.people`の内容を走査し、他の部分でも`self.people`を使用することが可能になります。Rust の所有権システムと借用のルールを理解することで、このような書き方が必要な理由が明確になります。
-
----
-
-## 課題 2
-
-ネットワーク通信を行うクライアント、サーバを作成します。
-
-### 問題
-
-1. `tokio`を使って TCP サーバとクライアントを実装してください。
-2. クライアントはプログラムの起動時に引数で受け取ったヘッダ文字列と、標準入力から得られたデータを JSON 形式でサーバに送信してください。
-3. JSON の形式は以下の通りです：
-
-```json
-{
-  "header": "header_context",
-  "body": "body_context"
-}
-```
-
-- `header`は引数から、`body`は標準入力から取得します。
-- リクエスト/レスポンスともにこの形式です。
-
-4. サーバもプログラムの起動時に引数で受け取ったヘッダ文字列を JSON の`header`に設定してレスポンスを返してください。
-5. サーバはプログラムの起動時に引数で受け取った`header`とは別の文字列をリクエストの`body`に追加し、レスポンスとして JSON を返してください。
-6. サーバとクライアントは接続を維持し、クライアントが切断するまで通信を行います。
-7. クライアントは`Ctrl-C`を入力されたらサーバと切断し、プログラムを終了します。
-8. クライアントはサーバから受け取ったレスポンスの JSON をそのまま標準出力に表示してください。
-9. サーバは同時に複数のクライアントとやり取りができ、それぞれ独立してやり取りができるようにしてください。
-
-### サンプルコード
-
-> [!WARNING]
-> これ以降は解答となる問題に対するサンプルコードです。最初はこれを見ずに自分なりに頑張ってみてください。
-
-#### Cargo.toml
-
-まず、必要な依存関係を追加します。
-
-```toml
-[dependencies]
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-```
-
-#### サーバーの実装
-
-```rust
-use tokio::net::TcpListener;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use serde::{Serialize, Deserialize};
-use std::env;
-
-#[derive(Serialize, Deserialize)]
-struct Request {
-    header: String,
-    body: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Response {
-    header: String,
-    body: String,
-}
-
-async fn handle_client(mut socket: tokio::net::TcpStream, response_header: String, append_str: String) {
-    let mut buffer = [0; 1024];
-    loop {
-        let n = match socket.read(&mut buffer).await {
-            Ok(n) if n == 0 => return,
-            Ok(n) => n,
-            Err(e) => {
-                eprintln!("failed to read from socket; err = {:?}", e);
-                return;
-            }
-        };
-
-        let request: Request = match serde_json::from_slice(&buffer[..n]) {
-            Ok(req) => req,
-            Err(e) => {
-                eprintln!("failed to parse JSON; err = {:?}", e);
-                continue;
-            }
-        };
-
-        let response = Response {
-            header: response_header.clone(),
-            body: format!("{}{}", request.body, append_str),
-        };
-
-        let response_json = match serde_json::to_string(&response) {
-            Ok(json) => json,
-            Err(e) => {
-                eprintln!("failed to serialize JSON; err = {:?}", e);
-                continue;
-            }
-        };
-
-        if let Err(e) = socket.write_all(response_json.as_bytes()).await {
-            eprintln!("failed to write to socket; err = {:?}", e);
-            return;
-        }
-    }
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: {} <response_header> <append_string>", args[0]);
-        std::process::exit(1);
-    }
-    let response_header = args[1].clone();
-    let append_str = args[2].clone();
-
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    println!("Server running on port 8080");
-
-    loop {
-        let (socket, _) = listener.accept().await?;
-        let response_header = response_header.clone();
-        let append_str = append_str.clone();
-        tokio::spawn(async move {
-            handle_client(socket, response_header, append_str).await;
-        });
-    }
-}
-```
-
-#### クライアントの実装
-
-```rust
-use tokio::net::TcpStream;
-use tokio::io::{self, AsyncWriteExt, AsyncReadExt};
-use serde::{Serialize, Deserialize};
-use std::env;
-use std::io::{stdin, BufRead};
-
-#[derive(Serialize, Deserialize)]
-struct Request {
-    header: String,
-    body: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Response {
-    header: String,
-    body: String,
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: {} <request_header>", args[0]);
-        std::process::exit(1);
-    }
-    let request_header = args[1].clone();
-
-    let mut socket = TcpStream::connect("127.0.0.1:8080").await?;
-    println!("Connected to the server.");
-
-    let stdin = io::stdin();
-    let mut handle = stdin.lock();
-
-    loop {
-        let mut input = String::new();
-        handle.read_line(&mut input)?;
-
-        let request = Request {
-            header: request_header.clone(),
-            body: input.trim().to_string(),
-        };
-
-        let request_json = serde_json::to_string(&request)?;
-
-        socket.write_all(request_json.as_bytes()).await?;
-
-        let mut buffer = [0; 1024];
-        let n = socket.read(&mut buffer).await?;
-
-        let response: Response = serde_json::from_slice(&buffer[..n])?;
-        println!("Response from server: {:?}", response);
-    }
-}
-```
-
-### 解説
-
-#### サーバーの実装
-
-1. コマンドライン引数の処理：`env::args()`を使ってプログラムの引数を取得し、`response_header`と`append_str`として保存します。
-2. `handle_client`関数に`response_header`と`append_str`を渡す：クライアント接続ごとにこれらの値を渡して、レスポンスに含めます。
-3. 同時接続の処理：`tokio::spawn`を使って、新しいクライアント接続ごとに非同期タスクを生成し、複数のクライアントとの独立したやり取りを実現します。
-
-#### クライアントの実装
-
-1. コマンドライン引数の処理：`env::args()`を使ってプログラムの引数を取得し、`request_header`として保存します。
-2. `Request`構造体に`request_header`を設定：標準入力から取得したデータと一緒に`request_header`をサーバーに送信します。
-3. レスポンスの表示：サーバーから受け取ったレスポンスの JSON をそのまま標準出力に表示します。
-
-これにより、サーバーとクライアントのヘッダ文字列をプログラムの起動時に引数で渡すことができ、指定されたヘッダを使って通信を行うことができます。また、サーバーはリクエストの body に追加する文字列も引数から受け取り、レスポンスに含めます。さらに、サーバーは同時に複数のクライアントとやり取りができ、それぞれ独立してやり取りができるようになります。
-
----
-
-## 課題 3
-
-### 課題内容
-
-1. コマンドライン引数で指定された複数の URL から HTML をダウンロードする。URL のリストは第二引数以降で指定します。
-2. ダウンロードした HTML を、指定されたプリフィックスを使ってファイルに保存する。
-3. ファイル名は`<prefix>_<number>.html` という形式にする。`prefix`は第一引数で指定します。`number`は指定された URL の順番で採番し、0 から始めます。
-4. ダウンロードやファイル操作中に発生するエラーを thiserror を使って処理する。
-
-#### サンプルの Error や関数一覧
-
-```rust
-use std::env;
-use std::fs::File;
-use std::io::{self, Write};
-use std::path::PathBuf;
-use thiserror::Error;
-use tokio::task;
-use reqwest::Error as ReqwestError;
-
-#[derive(Error, Debug)]
-pub enum DownloadError {
-    #[error("I/O Error")]
-    Io(#[from] io::Error),
-    #[error("Request Error")]
-    Reqwest(#[from] ReqwestError),
-}
-
-async fn download_html(url: &str) -> Result<String, DownloadError> {
-    ...
-}
-
-async fn save_html(prefix: &str, number: usize, html: &str) -> Result<(), DownloadError> {
-    ...
-}
-
-async fn process_url(url: &str, prefix: &str, number: usize) -> Result<(), DownloadError> {
-    ...
-}
-
-#[tokio::main]
-async fn main() -> Result<(), DownloadError> {
-    ...
-}
-```
-
-#### サンプルコード
-
-> [!WARNING]
-> これ以降は解答となる問題に対するサンプルコードです。最初はこれを見ずに自分なりに頑張ってみてください。
-
-##### Cargo.toml
-
-まず、必要な依存関係を追加します。
-
-```toml
-[dependencies]
-reqwest = { version = "0.12", features = ["json"] }
-thiserror = "1.0"
-tokio = { version = "1", features = ["full"] }
-```
-
-##### メインプログラム
-
-```rust
-use reqwest::Error as ReqwestError;
-use std::env;
-use std::fs::File;
-use std::io::{self, Write};
-use thiserror::Error;
-use tokio::task;
-
-#[derive(Error, Debug)]
-pub enum DownloadError {
-    #[error("I/O Error")]
-    Io(#[from] io::Error),
-    #[error("Request Error")]
-    Reqwest(#[from] ReqwestError),
-}
-
-async fn download_html(url: &str) -> Result<String, DownloadError> {
-    let response = reqwest::get(url).await?;
-    let html = response.text().await?;
-    Ok(html)
-}
-
-async fn save_html(prefix: &str, number: usize, html: &str) -> Result<(), DownloadError> {
-    let filename = format!("{}_{}.html", prefix, number);
-    let mut file = File::create(filename)?;
-    file.write_all(html.as_bytes())?;
-    Ok(())
-}
-
-async fn process_url(url: &str, prefix: &str, number: usize) -> Result<(), DownloadError> {
-    let html = download_html(url).await?;
-    save_html(prefix, number, &html).await?;
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() -> Result<(), DownloadError> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        eprintln!("Usage: {} <prefix> <url1> <url2> ...", args[0]);
-        std::process::exit(1);
-    }
-
-    let prefix = &args[1];
-    let urls = &args[2..];
-
-    let mut tasks = Vec::new();
-
-    for (i, url) in urls.iter().enumerate() {
-        let prefix = prefix.clone();
-        let url = url.clone();
-        tasks.push(task::spawn(async move {
-            match process_url(&url, &prefix, i).await {
-                Ok(_) => println!("Successfully downloaded and saved: {}", url),
-                Err(e) => eprintln!("Failed to process {}: {:?}", url, e),
-            }
-        }));
-    }
-
-    for task in tasks {
-        let _ = task.await;
-    }
-
-    Ok(())
-}
-```
-
-#### 解説
-
-##### Cargo.toml
-
-- thiserror: カスタムエラー型を簡単に定義するためのクレートです。
-- tokio: 非同期プログラミングをサポートするためのクレートです。
-- reqwest: HTTP クライアントとして使用するクレートです。
-
-##### カスタムエラー型の定義
-
-```rust
-#[derive(Error, Debug)]
-pub enum DownloadError {
-    #[error("I/O Error")]
-    Io(#[from] io::Error),
-    #[error("Request Error")]
-    Reqwest(#[from] ReqwestError),
-}
-```
-
-- `Io`: 標準の I/O エラーをラップします。`?`演算子を使用することで、自動的に`io::Error`を`DownloadError::Io`に変換します。
-- `Reqwest`: `reqwest`のエラーをラップします。`?`演算子を使用することで、自動的に`reqwest::Error`を`DownloadError::Reqwest`に変換します。
-
-##### HTML をダウンロードする関数
-
-```rust
-async fn download_html(url: &str) -> Result<String, DownloadError> {
-    let response = reqwest::get(url).await?;
-    let html = response.text().await?;
-    Ok(html)
-}
-```
-
-- `download_html`関数: 指定された URL から HTML をダウンロードします。?演算子を使ってエラーを簡潔にハンドリングしています。
-
-##### HTML を保存する関数
-
-```rust
-async fn save_html(prefix: &str, number: usize, html: &str) -> Result<(), DownloadError> {
-    let filename = format!("{}_{}.html", prefix, number);
-    let mut file = File::create(filename)?;
-    file.write_all(html.as_bytes())?;
-    Ok(())
-}
-```
-
-- save_html 関数: ダウンロードした HTML を指定されたファイル名で保存します。
-
-##### URL を処理する関数
-
-```rust
-async fn process_url(url: &str, prefix: &str, number: usize) -> Result<(), DownloadError> {
-    let html = download_html(url).await?;
-    save_html(prefix, number, &html).await?;
-    Ok(())
-}
-```
-
-- `process_url`関数: 指定された URL から HTML をダウンロードし、ファイルに保存します。エラーハンドリングを行い、適切なメッセージを出力します。
-
-##### メイン関数
-
-```rust
-#[tokio::main]
-async fn main() -> Result<(), DownloadError> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        eprintln!("Usage: {} <prefix> <url1> <url2> ...", args[0]);
-        std::process::exit(1);
-    }
-
-    let prefix = &args[1];
-    let urls = &args[2..];
-
-    let mut tasks = Vec::new();
-
-    for (i, url) in urls.iter().enumerate() {
-        let prefix = prefix.clone();
-        let url = url.clone();
-        tasks.push(task::spawn(async move {
-            match process_url(&url, &prefix, i).await {
-                Ok(_) => println!("Successfully downloaded and saved: {}", url),
-                Err(e) => eprintln!("Failed to process {}: {:?}", url, e),
-            }
-        }));
-    }
-
-    for task in tasks {
-        let _ = task.await;
-    }
-
-    Ok(())
-}
-```
-
-- コマンドライン引数の処理: プログラムの引数を取得し、prefix と urls として保存します。
-- 非同期タスクの生成: 各 URL に対して非同期タスクを生成し、並列に処理します。
-- タスクの完了を待つ: すべてのタスクが完了するまで待機します。
-
-### まとめ
-
-このプログラムは、以下のポイントを学ぶことができます。
-
-1. `thiserror` を使ったカスタムエラー型の定義とエラーハンドリング。
-2. `?`演算子を使った簡潔なエラーハンドリング。
-3. 非同期プログラミングの基本と並列処理。
-4. `reqwest` を使った HTTP リクエストの処理とエラーハンドリング。
-5. ファイル操作の基本。
-
-この課題を通じて、Rust のエラーハンドリングや非同期プログラミングの実用的な技術を学ぶことができます。
 
 ---
